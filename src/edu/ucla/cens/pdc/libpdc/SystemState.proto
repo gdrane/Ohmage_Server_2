@@ -1,0 +1,62 @@
+//package edu.ucla.cens.pdc.libpdc;
+
+option java_package = "edu.ucla.cens.pdc.libpdc";
+option optimize_for = LITE_RUNTIME;
+
+message GlobalConfig {
+	optional string root = 1;
+	repeated string applications = 2;
+}
+
+message KeyManager {
+	required bytes default_key_id = 1;
+	repeated bytes public_key_digests = 2;
+	repeated bytes private_key_digests = 3;
+}
+
+message AsyncKey {
+	enum KeyAlg {
+		RSA = 1;
+	}
+	required KeyAlg algorithm = 1 [default = RSA];
+	required bytes public_key = 2;
+	optional bytes private_key = 3;
+	optional int64 timestamp = 4;
+}
+
+message Application {
+	required string name = 1;
+	repeated string data_streams = 2;
+	optional int64 pull_rate = 16;
+}
+
+message DataStream {
+	required string data_stream_id = 1;
+	optional PDCPublisher publisher = 2;
+	repeated PDCReceiver receivers = 3;
+	optional StreamTransport transport = 17;
+}
+
+message StreamTransport {
+	required DataEncryptor encryptor = 1;
+}
+
+message DataEncryptor {
+	optional bytes encryption_key = 1;
+	optional bytes decryption_key = 2;
+	optional string stream_key_digest = 3;
+}
+
+message PDCNode {
+	required string uri = 1;
+	optional string key_digest = 2;
+	optional string key_locator = 3;
+}
+
+message PDCReceiver {
+	required PDCNode base = 1;
+}
+message PDCPublisher {
+	required PDCNode base = 1;
+	optional string stream_id = 2 [deprecated=true];
+}

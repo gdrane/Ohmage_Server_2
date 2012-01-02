@@ -1,0 +1,13 @@
+option java_package = "edu.ucla.cens.pdc.libpdc.util";
+option optimize_for = LITE_RUNTIME;
+
+message Symmetric {
+	required bytes cipher_text = 1;
+	optional bytes iv = 2;
+}
+
+message SignedInterest {
+	required string command = 1;
+	required bytes nonce = 2;
+	required bytes crc = 3;
+}
