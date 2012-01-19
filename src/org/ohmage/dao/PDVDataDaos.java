@@ -373,6 +373,57 @@ public class PDVDataDaos extends AbstractUploadDao {
 		return string;
 	}
 	
+	public static void addNewDevice(String userName, String origin_id) {
+		boolean entry_exists = checkDeviceExists(userName, origin_id);
+		if(entry_exists) {
+		instance.getJdbcTemplate().update(
+				SQL_INSERT_NEW_DEVICE,
+				new Object[] {userName, origin_id, 0}
+				);
+		}
+	}
+	
+	public static boolean checkDeviceExists(String userName, String origin_id) {
+		return instance.getJdbcTemplate().queryForObject(
+				SQL_CHECK_DEVICE_EXISTS,
+				new Object[] {userName, origin_id},
+				Boolean.class
+				);
+	}
+	
+	public static String getLastEntry(String userName, String origin_id) {
+		String last_entry;
+		if(checkDeviceExists(userName, origin_id)) {
+			last_entry = instance.getJdbcTemplate().queryForObject(SQL_GET_LAST_ENTRY,
+					new Object[]{userName, origin_id},
+					String.class
+					);
+		} else {
+			addNewDevice(userName, origin_id);
+			last_entry = null;
+		}
+		return last_entry;
+	}
+	
+	public static void updateLastEntry(String userName, String origin_id,
+			String new_val) {
+		final String updatedVal = new_val;
+		final String name = userName;
+		final String origin = origin_id;
+		instance.getJdbcTemplate().update(
+				new PreparedStatementCreator() {
+					public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
+						PreparedStatement ps 
+							= connection.prepareStatement(SQL_UPDATE_LAST_ENTRY);
+						ps.setString(1, updatedVal);
+						ps.setString(2, name);
+						ps.setString(4, origin);
+						return ps;
+					}
+				}
+				);
+	}
+	
 	private static PDVDataDaos instance;
 	private static Logger LOGGER = Logger.getLogger(MYSQLDataStorage.class);
 	private static final String SQL_INSERT_SURVEY_RESPONSE =
@@ -396,4 +447,30 @@ public class PDVDataDaos extends AbstractUploadDao {
 	        "(survey_response_id, repeatable_set_id, repeatable_set_iteration," +
 	        "prompt_type, prompt_id, response) " +
 	        "VALUES (?,?,?,?,?,?)";
+	
+	private static final String SQL_INSERT_NEW_DEVICE = 
+			"INSERT into device_state" +
+			"(username, origin_id, lastID" +
+			"VALUES (?,?,?)";	
+	
+	private static final String SQL_CHECK_DEVICE_EXISTS = 
+			"SELECT EXISTS( " +
+			"SELECT * " +
+			"FROM device_state" +
+			"WHERE username = ?" +
+			"AND origin_id = ?" +
+			")";
+
+	private static final String SQL_GET_LAST_ENTRY = 
+			"SELECT * " +
+			"FROM device_state" +
+			"WHERE username =?" +
+			"origin_id = ?";
+	
+	private static final String SQL_UPDATE_LAST_ENTRY = 
+			"UPDATE device_state " +
+			"SET lastID = ?" +
+			"WHERE username = ? AND" +
+			"origin_id = ? ";
+	
 }

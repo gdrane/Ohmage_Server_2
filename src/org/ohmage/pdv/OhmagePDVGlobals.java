@@ -176,6 +176,14 @@ public class OhmagePDVGlobals {
 		}
 	}
 	
+	public static String getAppInstance() {
+		return app_instance;
+	}
+	
+	public static String getAppName() {
+		return app_name;
+	}
+	
 	private static String hashUsername(String username)
 	{
 		MessageDigest md = null;
@@ -198,7 +206,6 @@ public class OhmagePDVGlobals {
 		return hexString.toString();
 	}
 	
-	
 	private static OhmagePDVGlobals _pdv_globals = null;
 	
 	private static boolean firstrun = true;
@@ -214,5 +221,9 @@ public class OhmagePDVGlobals {
 			"SURVEY_RESPONSE_STREAM";
 	
 	private final static String AUTHENTICATOR = "test_authenticator";
+	
+	private final static String app_instance = "ohmagepdv";
+	
+	private final static String app_name = "ohmage";
 
 }

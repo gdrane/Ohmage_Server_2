@@ -24,8 +24,8 @@ public class MYSQLDataStorage extends Storage {
 		return _lastProcessedID.get(pub_id);
 	}
 	
-	public void updateLastEntry(String pub_id, String new_val) {
-		_lastProcessedID.put(pub_id, new_val);
+	public void updateLastEntry(String userName, String origin_id, String new_val) {
+		PDVDataDaos.updateLastEntry(userName, origin_id, new_val);
 	}
 
 	@Override
@@ -68,6 +68,10 @@ public class MYSQLDataStorage extends Storage {
 			e.printStackTrace();
 		}
 		return false;
+	}
+	
+	public String getLastEntry(String userName, String origin_id) {
+		return PDVDataDaos.getLastEntry(userName, origin_id);
 	}
 	
 	public void initializeStream(String id)

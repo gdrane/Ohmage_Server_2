@@ -39,6 +39,7 @@ import org.ccnx.ccn.protocol.KeyLocator;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
 import org.ccnx.ccn.protocol.SignedInfo;
+import org.ohmage.pdv.storage.MYSQLDataStorage;
 
 /**
  *
@@ -300,7 +301,7 @@ public class StreamTransport {
 		return true;
 	}
 	
-	public boolean pullInterestHandlerOhmage(ContentName postfix, Interest interest)
+	public boolean pullInterestHandler(ContentName postfix, Interest interest)
 	{
 		try {
 			publishACK(interest);
@@ -313,7 +314,7 @@ public class StreamTransport {
 				"### GOT PULL REQUEST; ATTEMPING TO FETCH DATA FROM THE PRODUCER ### (Step T2)");
 
 		try {
-			fetchNewDataOhmage(postfix);
+			fetchNewData(postfix);
 		}
 		catch (PDCTransmissionException ex) {
 			Log.error("Error while pulling new records: " + ex.getLocalizedMessage());
@@ -379,6 +380,97 @@ public class StreamTransport {
 			throw new PDCTransmissionException("Unable to process the data", ex);
 		}
 	}
+	
+	public List<String> fetchListFromDevice(String origin_id)
+		throws PDCTransmissionException
+	{
+		return fetchListFromDevice(null, null, origin_id);
+	}
+	
+	public List<String> fetchListFromDevice(String start, String origin_id)
+	throws PDCTransmissionException
+	{
+		return fetchListFromDevice(start, null, origin_id);
+	}
+	
+	public List<String> fetchListFromDevice(String start, 
+			String end, String origin_id) throws PDCTransmissionException
+	{
+		ContentName uri = null;
+		ContentObject response;
+
+		byte[] decoded;
+		List<String> result;
+		
+		assert origin_id != null;
+		
+		try {
+			uri = _stream.getPublisherStreamURI().append(Constants.STR_CONTROL).
+					append("list");
+			if (start != null) {
+				uri = uri.append(start);
+				if (end != null)
+					uri = uri.append(end);
+				else uri = uri.append("0");
+			} else if(end == null) {
+				uri = uri.append("0").append("0");
+			}
+			else
+				throw new Error("Start is null, but end is not null???");
+			// Adding the origin_id in the end
+			uri.append(origin_id);
+		}
+		catch (MalformedContentNameStringException ex) {
+			throw new Error(String.format(
+					"Unable to create proper URI (%s, %s, %s, %s)",
+					_stream.app.getAppName(), _stream.data_stream_id, start, end));
+		}
+		
+		Log.debug("Requesting: " + uri.toURIString());
+
+		try {
+			response = _ccn_handle.get(uri, SystemConfiguration.LONG_TIMEOUT);
+		}
+		catch (IOException ex) {
+			throw new PDCTransmissionException("Unable to get the data", ex);
+		}
+		
+		if (response == null)
+			return null;
+
+		// Checking authenticity
+		final ContentVerifier verifier = _ccn_handle.keyManager().
+				getDefaultVerifier();
+		if (!verifier.verify(response)) {
+			Log.warning("Got a packet which I can't verify credentials.");
+			return null;
+		}
+
+		try {
+			decoded = _encryptor.decryptData(response.content());
+		}
+		catch (PDCEncryptionException ex) {
+			if (isFinalFailure(false))
+				throw new PDCTransmissionException(
+						"Unable to decrypt the message", ex);
+
+			Log.info(
+					"### UNABLE TO DECRYPT THE DATA; (RE)FETCHING STREAMINFO " +
+					"### (Step 7)");
+
+			fetchStreamInfo();
+			return null;
+		}
+		isFinalFailure(true);
+
+		//Special case (empty list returned)
+		if (decoded.length == 0)
+			return new LinkedList<String>();
+
+		result = Arrays.asList(new String(decoded).split("\\\n"));
+
+		return result;
+	}
 
 	public List<String> fetchList()
 			throws PDCTransmissionException
@@ -397,13 +489,12 @@ public class StreamTransport {
 	{
 		ContentName uri = null;
 		ContentObject response;
-
+		
 		byte[] decoded;
 		List<String> result;
-
 		try {
-			uri = _stream.getPublisherStreamURI().append(Constants.STR_CONTROL).append(
-					"list");
+			uri = _stream.getPublisherStreamURI().append(Constants.STR_CONTROL).
+					append("list");
 
 			if (start != null) {
 				uri = uri.append(start);
@@ -512,35 +603,26 @@ public class StreamTransport {
 		}
 	}
 	
-	public DataRecord fetchRecordOhmage(ContentName postfix, String content_id)
+	public DataRecord fetchRecord(ContentName postfix, String content_id)
 			throws PDCTransmissionException
 	{
 		DataRecord record;
-		ContentName publisher_ds, data_uri;
+		ContentName data_uri;
 		ContentObject response;
-		String phoneIMEI = null;
-		String Hpasswd = null;
-		try {
-			phoneIMEI = new String(_encryptor.decryptAsymData(postfix.stringComponent(0).getBytes()));
-			Hpasswd = new String(_encryptor.decryptAsymData(postfix.stringComponent(1).getBytes()));
-		} catch (PDCEncryptionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		assert Hpasswd != null : "Private key for server not setup";
+		String origin_id = null;
+		origin_id = postfix.stringComponent(0);
 		assert content_id != null;
 
 		Log.info("### FETCHING RECORD " + content_id + " ### (Step T4)");
 
-		publisher_ds = _stream.getPublisherStreamURIOhmage();
-
 		try {
-			data_uri = _stream.getPublisherStreamURIOhmage().append(phoneIMEI).
-					append(new String(_encryptor.encryptAsymData(_stream.getPublisher(), 
-							Hpasswd.getBytes()))).append(_stream.data_stream_id).
-							append(Constants.STR_DATA).append(content_id);
+			data_uri = _stream.getPublisherStreamURI().
+					append(_stream.data_stream_id).
+					append(Constants.STR_DATA).append(content_id).
+					append(origin_id);
 			try {
-				response = _ccn_handle.get(data_uri, SystemConfiguration.LONG_TIMEOUT);
+				response = _ccn_handle.get(data_uri, 
+						SystemConfiguration.LONG_TIMEOUT);
 			}
 			catch (IOException ex) {
 				throw new PDCTransmissionException("Unable to fetch the data", ex);
@@ -557,16 +639,14 @@ public class StreamTransport {
 				return null;
 			}
 
-			
 			record = _encryptor.decryptRecord(response.content());
-			
-		
+				
 			return record;
 		}
 		catch (MalformedContentNameStringException ex) {
 			throw new PDCTransmissionException(String.format(
 					"Unable to create proper URI (%s, %s, %s)",
-					publisher_ds, Constants.STR_CONTROL, content_id), ex);
+					_stream.getPublisherStreamURI(), Constants.STR_CONTROL, content_id), ex);
 		}
 		catch (PDCEncryptionException ex) {
 			throw new PDCTransmissionException("Unable to decrypt message", ex);
@@ -653,16 +733,19 @@ public class StreamTransport {
 		return true;
 	}
 	
-	synchronized boolean fetchNewDataOhmage(ContentName postfix)
+	// Gauresh
+	synchronized boolean fetchNewData(ContentName postfix)
 		throws PDCTransmissionException 
 	{
 		PDCPublisher publisher;
 		String last_entry;
 		DataRecord record;
-		Collection<String> ids;
-		Storage storage;
+		List<String> ids;
+		MYSQLDataStorage storage;
 
-		storage = _stream.getStorage();
+		storage = (MYSQLDataStorage) _stream.getStorage();
+		
+		String origin_id = postfix.stringComponent(0);
 
 		publisher = _stream.getPublisher();
 		if (publisher == null) {
@@ -670,20 +753,14 @@ public class StreamTransport {
 			return true;
 		}
 
-		try {
-			last_entry = storage.getLastEntry();
-		}
-		catch (PDCDatabaseException ex) {
-			throw new PDCTransmissionException(
-					"Unable to fetch id of last record from the database", ex);
-		}
+		last_entry = storage.getLastEntry(_stream.getUsername(), origin_id);
 
 		Log.info("### REQUESTING LIST OF NEW DATA IDS ### (Step T3)");
 
 		if (last_entry == null)
-			ids = fetchList();
+			ids = fetchListFromDevice(origin_id);
 		else
-			ids = fetchList(last_entry);
+			ids = fetchListFromDevice(last_entry, origin_id);
 
 		if (ids == null) {
 			Log.warning("No response when fetching ids");
@@ -698,7 +775,7 @@ public class StreamTransport {
 		try {
 			for (final String data_id : ids) {
 				Log.debug("pulling: " + data_id);
-				record = fetchRecordOhmage(postfix, data_id);
+				record = fetchRecord(postfix, data_id);
 				if (record == null) {
 					Log.warning("No response when fetching record " + data_id);
 					return false;
@@ -713,7 +790,8 @@ public class StreamTransport {
 		catch (PDCDatabaseException ex) {
 			throw new Error("Unable to insert entry to the database", ex);
 		}
-
+		//Update last_entry in the database for this origin_id
+		storage.updateLastEntry(_stream.getUsername(), origin_id, ids.get(ids.size() - 1));
 		return true;
 	}
 

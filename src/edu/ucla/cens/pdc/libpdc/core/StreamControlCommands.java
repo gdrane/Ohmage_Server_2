@@ -335,7 +335,7 @@ public class StreamControlCommands extends StreamCommand {
 			else if (command.equals("key"))
 				return processKey(ds, remainder, interest);
 			else if (command.equals("pull"))
-				return ds.getTransport().pullInterestHandler(interest);
+				return ds.getTransport().pullInterestHandler(remainder, interest);
 			else if (command.equals("list"))
 				return ds.getTransport().publishRecordList(interest, remainder);
 			else if (command.equals("last"))

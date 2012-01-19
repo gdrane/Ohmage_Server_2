@@ -16,6 +16,7 @@ import org.ccnx.ccn.CCNFilterListener;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.Interest;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
+import org.ohmage.pdv.OhmagePDVGlobals;
 
 /**
  *
@@ -95,6 +96,37 @@ final public class PDVInstance implements CCNFilterListener {
 		if (postfix == null || postfix.count() < 2)
 			return false;
 
+		if(postfix.stringComponent(0).equals(OhmagePDVGlobals.getAppInstance())) {
+			app_name = OhmagePDVGlobals.getAppName();
+			app = _config.getApplication(app_name);
+			if (app == null) {
+				Log.warning("Application " + app_name
+						+ " doesn't exist.");
+				return false;
+			}
+			
+			if (postfix.count() < 4)
+				return false;
+
+			ds_name = postfix.stringComponent(1);
+			ds = app.getDataStream(ds_name);
+			if (ds == null) {
+				Log.warning("Stream " + ds_name + " doesn't exist.");
+				return false;
+			}
+			
+			command_name = postfix.stringComponent(2);
+			if (!_stream_commands.containsKey(command_name)) {
+				Log.warning("Unknown command: " + command_name);
+				return false;
+			}
+
+			ContentName remain = postfix.subname(3, postfix.count() - 3);
+			StreamCommand cmd = _stream_commands.get(command_name);
+
+			return cmd.processCommand(ds, remain, interest);
+
+		}
 		//check for manage command
 		if (postfix.stringComponent(0).equals(Constants.STR_MANAGE)) {
 			GenericCommand cmd = this._generic_commands.get(Constants.STR_MANAGE);
