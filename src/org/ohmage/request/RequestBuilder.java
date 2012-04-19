@@ -23,6 +23,7 @@ import org.ohmage.request.document.DocumentDeletionRequest;
 import org.ohmage.request.document.DocumentReadContentsRequest;
 import org.ohmage.request.document.DocumentReadRequest;
 import org.ohmage.request.document.DocumentUpdateRequest;
+import org.ohmage.request.easypost.EasyPostRequest;
 import org.ohmage.request.image.ImageReadRequest;
 import org.ohmage.request.mobility.MobilityReadChunkedRequest;
 import org.ohmage.request.mobility.MobilityReadRequest;
@@ -137,7 +138,7 @@ public final class RequestBuilder {
 		}
 	}
 	
-	public static final String API_ROOT = "/app";
+	public static final String API_ROOT = "/app-2.7/app";
 	
 	// Audit
 	public static final String API_AUDIT_READ = API_ROOT + "/audit/read";
@@ -205,6 +206,9 @@ public final class RequestBuilder {
 	public static final String API_VISUALIZATION_SURVEY_RESPONSE_PRIVACY = API_VISUALIZATION + "/survey_responses_privacy_state/read";
 	public static final String API_VISUALIZATION_SURVEY_RESPONSE_PRIVACY_TIMESERIES = API_VISUALIZATION + "/survey_responses_privacy_state_time/read";
 	
+	
+	// Easy Post
+	public static final String API_EASY_POST = API_ROOT + "/ep";
 	/**
 	 * Builds a new request based on the request's URI. This will always return
 	 * a request and will never return null. If the URI is unknown it will 
@@ -356,6 +360,8 @@ public final class RequestBuilder {
 		}
 		else if(API_VISUALIZATION_SURVEY_RESPONSE_PRIVACY_TIMESERIES.equals(requestUri)) {
 			return new VizSurveyResponsePrivacyStateTimeseriesRequest(httpRequest);
+		} else if(API_EASY_POST.equals(requestUri)) {
+			return new EasyPostRequest(httpRequest);
 		}
 		
 		// The URI is unknown.

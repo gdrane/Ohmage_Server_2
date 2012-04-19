@@ -36,14 +36,15 @@ public class NDNUtils {
 	}
 	
 	public static byte[] decryptConfigData(byte[] data) {
-		GlobalConfig config = GlobalConfig.getInstance();
+		final GlobalConfig config = GlobalConfig.getInstance();
 		KeyManager keymgr;
 		PrivateKey private_key;
 		Log.debug("Decrypting data using my key: ");
 
 		keymgr = config.getKeyManager();
 		assert keymgr != null;
-		private_key = keymgr.getSigningKey(OhmagePDVGlobals.getConfigurationDigest());
+		private_key = keymgr.getSigningKey(
+				OhmagePDVGlobals.getConfigurationDigest());
 		
 		assert private_key != null;
 

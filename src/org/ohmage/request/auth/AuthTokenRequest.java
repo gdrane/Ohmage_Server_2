@@ -47,7 +47,7 @@ public class AuthTokenRequest extends UserRequest {
 	 * @param httpRequest The HTTP request containing the parameters.
 	 */
 	public AuthTokenRequest(HttpServletRequest httpRequest) {
-		super(httpRequest, true);
+		super(httpRequest, false);
 		
 		LOGGER.info("Building an authentication token request.");
 	}

@@ -8,6 +8,8 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.mongodb.BasicDBList;
 import com.mongodb.DBObject;
+
+import edu.ucla.cens.pdc.libpdc.core.StreamControlCommands;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
@@ -18,6 +20,8 @@ import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
+
+import org.apache.log4j.Logger;
 import org.bson.BSONDecoder;
 import org.bson.BSONEncoder;
 import org.bson.BSONObject;
@@ -93,6 +97,7 @@ public class EncryptionHelper {
 			message = EncryptedMessage.Symmetric.parseFrom(input);
 		}
 		catch (InvalidProtocolBufferException ex) {
+			LOGGER.info("Invalid input format" + ex);
 			throw new PDCEncryptionException("Invalid input format", ex);
 		}
 
@@ -109,6 +114,7 @@ public class EncryptionHelper {
 			return data;
 		}
 		catch (GeneralSecurityException ex) {
+			LOGGER.info("Unable to decrypt data" + ex);
 			throw new PDCEncryptionException("Unable to decrypt the data", ex);
 		}
 	}
@@ -214,10 +220,14 @@ public class EncryptionHelper {
 			obj = decoder.readObject(cipherText);
 		}
 		catch (RuntimeException ex) {
-			throw new PDCEncryptionException("invalida data", ex);
+			LOGGER.error("Invalid data " + ex);
+			throw new PDCEncryptionException("invalid data" +  ex, ex);
 		}
 
 		secret_key = unwrapKey(private_key, (byte[]) obj.get("0"));
+		if(secret_key == null) {
+			LOGGER.info("Secret key is null");
+		}
 		iv = (byte[]) obj.get("1");
 		try {
 			cipher = Cipher.getInstance("AES/CTR/PKCS7Padding");
@@ -228,7 +238,8 @@ public class EncryptionHelper {
 			return cipher.doFinal(aes_ciphertext);
 		}
 		catch (GeneralSecurityException ex) {
-			throw new PDCEncryptionException("Unable to decrypt message", ex);
+			LOGGER.info("Unable to decrypt message" + ex);
+			throw new PDCEncryptionException("Unable to decrypt message" + ex, ex);
 		}
 	}
 
@@ -239,4 +250,5 @@ public class EncryptionHelper {
 	}
 
 	private static SecureRandom _random = null;
+	private static final Logger LOGGER = Logger.getLogger(EncryptionHelper.class);
 }

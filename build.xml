@@ -12,35 +12,29 @@
 
   <fileset id="compile-dependencies" dir="${component.repository}">
     <include name="log4j-1.2.16.jar"/>
+  	<include name="bcprov-jdk16-143.jar"/>
     <include name="servlet-api.jar"/>
 	<include name="org.springframework.beans-3.1.0.RC1.jar"/>
 	<include name="org.springframework.core-3.1.0.RC1.jar"/>
 	<include name="org.springframework.jdbc-3.1.0.RC1.jar"/>
 	<include name="org.springframework.transaction-3.1.0.RC1.jar"/>
-	<include name="org.springframework.beans-3.0.5.RELEASE.jar" />
-    <include name="org.springframework.core-3.0.5.RELEASE.jar" />
-    <include name="org.springframework.jdbc-3.0.5.RELEASE.jar" />
-    <include name="org.springframework.transaction-3.0.5.RELEASE.jar" />
     <include name="commons-logging-1.1.1.jar"/>
     <include name="commons-dbcp-1.4.jar"/>
     <include name="commons-io-2.1.jar"/>
     <include name="commons-fileupload-1.2.2.jar"/>
     <include name="commons-pool-1.5.7.jar"/>
-    <include name="json-dot-org-2010-01-05.jar"/>
     <include name="json-org.jar"/>
 	<include name="gson-2.1.jar"/>
-    <include name="jbcrypt-0.3.jar"/>
     <include name="xom-1.2.7.jar"/>
-    <include name="mobility-classifier-1.1.jar"/>
-    <include name="xml-apis-xerces-2.11.0.jar"/>
   	<include name="ccn.jar"/>
   	<include name="mongo-2.5.3.jar"/>
 	<include name="protobuf-java-2.4.1.jar"/>
-  	<include name="bcprov-jdk16-143.jar"/>
+	<include name="commons-lang3-3.1.jar" />
   </fileset>
 
   <fileset id="run-dependencies" dir="${component.repository}">
     <include name="log4j-1.2.16.jar"/>
+  	<include name="bcprov-jdk16-143.jar"/>
     <include name="org.springframework.asm-3.1.0.RC1.jar"/>
 	<include name="org.springframework.beans-3.1.0.RC1.jar"/>
 	<include name="org.springframework.context-3.1.0.RC1.jar"/>
@@ -51,33 +45,20 @@
 	<include name="org.springframework.web-3.1.0.RC1.jar"/>
 	<include name="org.springframework.web.portlet-3.1.0.RC1.jar"/>
 	<include name="org.springframework.web.servlet-3.1.0.RC1.jar"/>
-	<include name="org.springframework.asm-3.0.5.RELEASE.jar" />
-    <include name="org.springframework.beans-3.0.5.RELEASE.jar" />
-    <include name="org.springframework.context-3.0.5.RELEASE.jar" />
-    <include name="org.springframework.core-3.0.5.RELEASE.jar" />
-    <include name="org.springframework.expression-3.0.5.RELEASE.jar" />
-    <include name="org.springframework.jdbc-3.0.5.RELEASE.jar" />
-    <include name="org.springframework.transaction-3.0.5.RELEASE.jar" />
-    <include name="org.springframework.web-3.0.5.RELEASE.jar" />
     <include name="commons-logging-1.1.1.jar"/>
     <include name="mysql-connector-java-5.1.18-bin.jar"/>
     <include name="commons-dbcp-1.4.jar"/>
     <include name="commons-io-2.1.jar"/>
     <include name="commons-fileupload-1.2.2.jar"/>
     <include name="commons-pool-1.5.7.jar"/>
-    <include name="jstl-1.2.jar"/>
-    <include name="json-dot-org-2010-01-05.jar"/>
     <include name="json-org.jar"/>
     <include name="gson-2.1.jar"/>
-    <include name="jbcrypt-0.3.jar"/>
     <include name="xom-1.2.7.jar"/>
-    <include name="mobility-classifier-1.1.jar"/>
-    <include name="xml-apis-xerces-2.11.0.jar"/>
   	<include name="ccn.jar"/>
   	<include name="mongo-2.5.3.jar"/>
 	<include name="protobuf-java-2.4.1.jar"/>
-  	<include name="bcprov-jdk16-143.jar"/>
-  </fileset>
+	<include name="commons-lang3-3.1.jar" />
+ </fileset>
 
   <path id="compile-classpath">
     <fileset refid="compile-dependencies"/>
@@ -106,7 +87,7 @@
     <mkdir dir="${build}/classes"/>
     <javac destdir="${build}/classes" source="1.6" target="1.6"
           debug="true" deprecation="true" optimize="false" failonerror="true" 
-    	  encoding="UTF-8">
+    	  encoding="UTF-8" includeantruntime="false">
       <compilerarg value="-Xlint:unchecked"/>
       <src path="${src}"/>
       <classpath refid="compile-classpath"/>

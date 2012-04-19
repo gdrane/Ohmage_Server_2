@@ -120,14 +120,14 @@ public class CampaignValidator {
 	 */
 	public void run(String xml, String schemaFileName) throws SAXException, ValidityException, ParsingException, ConditionParseException {
 		LOGGER.info("Starting validation.");
-		
+		/*
 		try {
 			checkSchemaOnStrings(xml, schemaFileName);
 		}
 		catch(IOException e) {
 			LOGGER.error("Failed to open schema to validate campaign.", e);
 			throw new IllegalStateException("Problem reading schema file.");
-		}
+		}*/
 		LOGGER.info("schema validation successful");
 		
 		// Now use XOM to retrieve a Document and a root node for further processing. XOM is used because it has a 

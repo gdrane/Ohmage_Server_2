@@ -20,6 +20,8 @@ import org.ohmage.service.UserServices;
 import org.ohmage.validator.CampaignValidators;
 import org.ohmage.validator.ClassValidators;
 
+import edu.ucla.cens.pdc.libpdc.util.Log;
+
 /**
  * <p>A request to create a campaign. The creator must associate it with at 
  * least one class.</p>
@@ -180,6 +182,18 @@ public class CampaignCreationRequest extends UserRequest {
 			LOGGER.info("Creating the campaign.");
 			CampaignServices.createCampaign(this, campaignInfo.getCampaignId(), campaignInfo.getCampaignName(), 
 					xml, description, campaignInfo.getIconUrl(), campaignInfo.getAuthoredBy(), runningState, privacyState, classIds, getUser().getUsername());
+			
+			List<String> usersInClasses = 
+					UserClassServices.getUsersInClasses(classIds, xml);
+			Log.info("Printing userName size of List :" + usersInClasses.size());
+			for(String username : usersInClasses) {
+				Log.info(username);
+				if(CampaignServices.createSurveyStreamsForCampaignUser(this,
+							campaignInfo.getCampaignId(), username))
+					Log.info("Created Survey for User");
+				else
+					Log.info("Could not create survey stream for user");
+			}
 		}
 		catch(ServiceException e) {
 			e.logException(LOGGER);

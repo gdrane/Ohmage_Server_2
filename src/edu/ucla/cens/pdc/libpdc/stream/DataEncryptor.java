@@ -9,6 +9,7 @@ import edu.ucla.cens.pdc.libpdc.SystemState;
 import edu.ucla.cens.pdc.libpdc.datastructures.DataRecord;
 import edu.ucla.cens.pdc.libpdc.core.GlobalConfig;
 import edu.ucla.cens.pdc.libpdc.core.PDCKeyManager;
+import edu.ucla.cens.pdc.libpdc.core.StreamControlCommands;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCEncryptionException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCException;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCParseException;
@@ -30,6 +31,7 @@ import org.bouncycastle.crypto.engines.TwofishEngine;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
+import org.apache.log4j.Logger;
 import org.ccnx.ccn.KeyManager;
 import org.ccnx.ccn.protocol.KeyLocator;
 import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
@@ -290,13 +292,23 @@ public class DataEncryptor {
 		KeyManager keymgr;
 		PrivateKey private_key;
 
-		Log.debug("Decrypting data using my key: " + _stream_key_digest);
+		LOGGER.debug("Decrypting data using my key: " + _stream_key_digest);
 
 		keymgr = config.getKeyManager();
 		assert keymgr != null;
+		if(keymgr == null) {
+			LOGGER.error("Keymanager null");
+		} else {
+			LOGGER.info("keymanager not null");
+		}
 
 		private_key = keymgr.getSigningKey(_stream_key_digest);
 		assert private_key != null;
+		if(private_key == null) {
+			LOGGER.info("private _key null");
+		} else {
+			LOGGER.info("Private key not null");
+		}
 
 		return EncryptionHelper.decryptAsymData(private_key, cipherText);
 	}
@@ -388,4 +400,6 @@ public class DataEncryptor {
 	 * keys associated with our stream
 	 */
 	protected PublisherPublicKeyDigest _stream_key_digest;
+	
+	private static final Logger LOGGER = Logger.getLogger(DataEncryptor.class);
 }

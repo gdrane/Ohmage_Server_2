@@ -1,5 +1,6 @@
 package org.ohmage.service;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,6 +16,8 @@ import org.ohmage.domain.UserPersonal;
 import org.ohmage.exception.DataAccessException;
 import org.ohmage.exception.ServiceException;
 import org.ohmage.request.Request;
+
+import edu.ucla.cens.pdc.libpdc.util.Log;
 
 /**
  * This class contains the services for user-class relationships.
@@ -258,5 +261,25 @@ public final class UserClassServices {
 			request.setFailed();
 			throw new ServiceException(e);
 		}
+	}
+
+	public static List<String> getUsersInClasses(List<String> classIds,
+			String xml) {
+		ArrayList<String> users = new ArrayList<String>();
+		try {
+			for(String classId : classIds) {
+				List<String> usersInClass;
+				usersInClass = UserClassDaos.getUsersInClass(classId);
+				for(String user : usersInClass) {
+					Log.info("User name : " + user);
+					if(!users.contains(user))
+						users.add(user);
+				}
+			}
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return users;		
 	}
 }

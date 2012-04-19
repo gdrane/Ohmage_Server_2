@@ -223,11 +223,24 @@ public class CampaignUpdateRequest extends UserRequest {
 				
 				LOGGER.info("Verifying that the ID and name for the XML haven't changed.");
 				CampaignServices.verifyTheNewXmlIdAndNameAreTheSameAsTheCurrentIdAndName(this, campaignId, xml);
+				
+				// TODO(gdrane) : Add code to handle new survey added in the xml
 			}
 			
 			if(classIds != null) {
-				LOGGER.info("Verifying that all of the classes exist and that the user belongs.");
-				UserClassServices.classesExistAndUserBelongs(this, classIds, getUser().getUsername());
+				LOGGER.info("Verifying that all of the classes exist " +
+						"and that the user belongs.");
+				UserClassServices.classesExistAndUserBelongs(this, classIds, 
+						getUser().getUsername());
+				// For Each ClassId added 
+				for(String classId : classIds) {
+					List<String> users = UserClassServices.getUsersInClass(this,
+							classId);
+					for(String username : users) {
+						CampaignServices.createSurveyStreamsForCampaignUser(
+								this, campaignId, username);
+					}
+				}
 			}
 			
 			if(usersAndRolesToAdd != null) {

@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.ucla.cens.pdc.libpdc.iApplication;
+import edu.ucla.cens.pdc.libpdc.Application;
 import edu.ucla.cens.pdc.libpdc.datastructures.DataRecord;
 import edu.ucla.cens.pdc.libpdc.exceptions.PDCDatabaseException;
 import edu.ucla.cens.pdc.libpdc.stream.Storage;
@@ -14,7 +14,7 @@ import org.ohmage.exception.DataAccessException;
 
 public class MYSQLDataStorage extends Storage {
 
-	public MYSQLDataStorage(iApplication app, String data_stream_id) {
+	public MYSQLDataStorage(Application app, String data_stream_id) {
 		super(app, data_stream_id);
 		_app = app;
 		_data_stream_id = data_stream_id;
@@ -80,7 +80,7 @@ public class MYSQLDataStorage extends Storage {
 	}
 	
 	Map<String, String> _lastProcessedID = new HashMap<String, String>();
-	private iApplication _app = null;
+	private Application _app = null;
 	private String _data_stream_id = null;
 
 }

@@ -19,10 +19,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.log4j.Logger;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.config.ConfigurationException;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
+import org.ohmage.pdv.OhmagePDVGlobals;
 
 /**
  *
@@ -32,22 +35,24 @@ public class GlobalConfig implements iState {
 	@SuppressWarnings("LeakingThisInConstructor")
 	private GlobalConfig()
 	{
+		LOGGER.info("Global config constructor, setting up config storage");
 		_config_storage = setupConfigStorage();
+		LOGGER.info("Config storage setup");
 		try {
 			_instance = this;
 			setupObject(false);
 		}
 		catch (IOException ex) {
 			_instance = null;
-			throw new Error("Cannot instantiate config", ex);
+			LOGGER.error("Cannot instantiate config" + ex.toString());
 		}
 		catch (RuntimeException ex) {
 			_instance = null;
-			throw ex;
+			LOGGER.error(ex.toString());
 		}
 		catch (Error ex) {
 			_instance = null;
-			throw ex;
+			LOGGER.error(ex.toString());
 		}
 	}
 
@@ -102,7 +107,7 @@ public class GlobalConfig implements iState {
 			setKeyManager(keymanager);
 		}
 		catch (ConfigurationException ex) {
-			throw new Error("Unable to setup keymanager", ex);
+			LOGGER.error("Unable to setup keymanager " + ex.toString());
 		}
 	}
 
@@ -132,7 +137,8 @@ public class GlobalConfig implements iState {
 			store = constructor.newInstance(app, data_stream_id);
 		}
 		catch (Exception ex) {
-			throw new Error("Unable instantiate the storage class", ex);
+			LOGGER.error("Unable instantiate the storage class" + ex.toString());
+			return null;
 		}
 
 		return store;
@@ -158,7 +164,8 @@ public class GlobalConfig implements iState {
 			return _config_storage_class.newInstance();
 		}
 		catch (Exception ex) {
-			throw new Error("Error while instantiating storage object", ex);
+			LOGGER.error("Error while instantiating storage object" + ex.toString());
+			throw new Error();
 		}
 	}
 
@@ -210,6 +217,7 @@ public class GlobalConfig implements iState {
 				_ccn_handle = CCNHandle.open(_key_manager);
 		}
 		catch (IOException ex) {
+			LOGGER.error("Unable to open handle" + ex.toString());
 			throw new RuntimeException("Unable to open handle", ex);
 		}
 
@@ -396,6 +404,8 @@ public class GlobalConfig implements iState {
 
 	public static final int FEAT_FILTERING = 0x4;
 
+	public static final int FEAT_KEYSTORE = 0x8;
+	
 	private static int _features = FEAT_SHARING;
 
 	private transient iConfigStorage _config_storage;
@@ -407,4 +417,7 @@ public class GlobalConfig implements iState {
 	private transient PDCKeyManager _key_manager = null;
 
 	private transient CCNHandle _ccn_handle = null;
+	
+	private static final Logger LOGGER = 
+			Logger.getLogger(GlobalConfig.class);
 }

@@ -7,11 +7,12 @@ package edu.ucla.cens.pdc.libpdc.core;
 import edu.ucla.cens.pdc.libpdc.Application;
 import edu.ucla.cens.pdc.libpdc.Constants;
 import edu.ucla.cens.pdc.libpdc.stream.DataStream;
-import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.MiscFuncs;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.log4j.Logger;
 import org.ccnx.ccn.CCNFilterListener;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.Interest;
@@ -33,6 +34,9 @@ final public class PDVInstance implements CCNFilterListener {
 
 			if (GlobalConfig.hasFeature(GlobalConfig.FEAT_MANAGE))
 				add_generic_command(new ManageCommand());
+
+			if (GlobalConfig.hasFeature(GlobalConfig.FEAT_KEYSTORE))
+				add_generic_command(new KeyStoreCommand());
 		}
 		catch (MalformedContentNameStringException ex) {
 			throw new Error("Unable to instantiate PDVInstance class", ex);
@@ -46,7 +50,7 @@ final public class PDVInstance implements CCNFilterListener {
 		_config.getCCNHandle().registerFilter(root, this);
 
 		if (GlobalConfig.hasFeature(GlobalConfig.FEAT_MANAGE)) {
-			Log.info("PDV Instance Root: " + root.toURIString());
+			LOGGER.info("PDV Instance Root: " + root.toURIString());
 			MiscFuncs.printKeyToLog(this._config.getKeyManager().getKeysForWC().
 					getPublic(), "Public Key: ");
 		}
@@ -69,6 +73,7 @@ final public class PDVInstance implements CCNFilterListener {
 		 * <stream_id>/control/stream_info/<receiver>
 		 * <stream_id>/control/list[/<last_data_id>]
 		 * <stream_id>/control/setup/<Publisher> 
+		 * <stream_id>/control/recv_digest/<encrypted_info>/hashedimei
 		 *
 		 * Receiver commands:
 		 * <app_id>/control/setup/<stream>
@@ -80,6 +85,10 @@ final public class PDVInstance implements CCNFilterListener {
 		 * manage/list/datarecords/<app_id>/<ds_id>  
 		 * manage/login
 		 * manage/login/isAuthenticated
+		 * 
+		 * KeyStore commands:
+		 * key_store/get
+		 * key_store/put
 		 */
 
 		ContentName root, name, postfix;
@@ -91,37 +100,54 @@ final public class PDVInstance implements CCNFilterListener {
 		name = interest.name();
 		postfix = name.postfix(root);
 
-		Log.info("Got interest: " + name + ", postfix: " + postfix);
+		LOGGER.info("Got interest: " + name + ", postfix: " + postfix);
 
 		if (postfix == null || postfix.count() < 2)
 			return false;
-
-		if(postfix.stringComponent(0).equals(OhmagePDVGlobals.getAppInstance())) {
+		LOGGER.info("PostFix first component value" + postfix.stringComponent(0));
+		if(postfix.stringComponent(0).equals(OhmagePDVGlobals.getAppInstance())) 
+		{
+			LOGGER.info("Could get in the main shabang");
 			app_name = OhmagePDVGlobals.getAppName();
 			app = _config.getApplication(app_name);
 			if (app == null) {
-				Log.warning("Application " + app_name
+				LOGGER.warn("Application " + app_name
 						+ " doesn't exist.");
 				return false;
 			}
 			
-			if (postfix.count() < 4)
-				return false;
-
 			ds_name = postfix.stringComponent(1);
+			LOGGER.info("DataStream name received is : " + ds_name);
+			if(ds_name.equals(Constants.STR_MANAGE)) {
+				GenericCommand cmd = _generic_commands.get(Constants.STR_MANAGE);
+				if (cmd == null) {
+					LOGGER.error("manage command not supported by this PDV Instance.");
+					return false;
+				}
+				return cmd.processCommand(postfix.subname(1, postfix.count() - 1), 
+						interest);
+			} else if(ds_name.equals(Constants.STR_KEYSTORE)) {
+				GenericCommand cmd = _generic_commands.get(Constants.STR_KEYSTORE);
+				if(cmd == null) {
+					LOGGER.error("key_store command not supported by this PDV Instance");
+					return false;
+				}
+				return cmd.processCommand(postfix.subname(1, postfix.count() - 1),
+						interest);
+			}
 			ds = app.getDataStream(ds_name);
 			if (ds == null) {
-				Log.warning("Stream " + ds_name + " doesn't exist.");
+				LOGGER.warn("Stream " + ds_name + " doesn't exist.");
 				return false;
 			}
 			
 			command_name = postfix.stringComponent(2);
 			if (!_stream_commands.containsKey(command_name)) {
-				Log.warning("Unknown command: " + command_name);
+				LOGGER.warn("Unknown command: " + command_name);
 				return false;
 			}
 
-			ContentName remain = postfix.subname(3, postfix.count() - 3);
+			ContentName remain = postfix.subname(1, postfix.count() - 1);
 			StreamCommand cmd = _stream_commands.get(command_name);
 
 			return cmd.processCommand(ds, remain, interest);
@@ -131,7 +157,7 @@ final public class PDVInstance implements CCNFilterListener {
 		if (postfix.stringComponent(0).equals(Constants.STR_MANAGE)) {
 			GenericCommand cmd = this._generic_commands.get(Constants.STR_MANAGE);
 			if (cmd == null) {
-				Log.error("manage command not supported by this PDV Instance.");
+				LOGGER.error("manage command not supported by this PDV Instance.");
 				return false;
 			}
 			return cmd.processCommand(postfix.subname(1, postfix.count() - 1),
@@ -141,13 +167,12 @@ final public class PDVInstance implements CCNFilterListener {
 		app_name = postfix.stringComponent(0);
 		app = _config.getApplication(app_name);
 		if (app == null) {
-			Log.warning("Application " + app_name
+			LOGGER.warn("Application " + app_name
 					+ " doesn't exist.");
 			return false;
 		}
 
 		if (postfix.stringComponent(1).equals("control"))
-			//TODO: implement it (receiver side)
 			throw new UnsupportedOperationException(
 					"Not implemented yet");
 
@@ -157,13 +182,13 @@ final public class PDVInstance implements CCNFilterListener {
 		ds_name = postfix.stringComponent(1);
 		ds = app.getDataStream(ds_name);
 		if (ds == null) {
-			Log.warning("Stream " + ds_name + " doesn't exist.");
+			LOGGER.warn("Stream " + ds_name + " doesn't exist.");
 			return false;
 		}
 
 		command_name = postfix.stringComponent(2);
 		if (!_stream_commands.containsKey(command_name)) {
-			Log.warning("Unknown command: " + command_name);
+			LOGGER.warn("Unknown command: " + command_name);
 			return false;
 		}
 
@@ -190,4 +215,7 @@ final public class PDVInstance implements CCNFilterListener {
 			2);
 
 	final private GlobalConfig _config = GlobalConfig.getInstance();
+	
+	private static final Logger LOGGER = 
+			Logger.getLogger(PDVInstance.class);
 }

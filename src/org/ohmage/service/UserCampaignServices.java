@@ -739,7 +739,7 @@ public class UserCampaignServices {
 			return result;
 		}
 		catch(DataAccessException e) {
-			request.setFailed();
+			// request.setFailed();
 			throw new ServiceException(e);
 		}
 	}

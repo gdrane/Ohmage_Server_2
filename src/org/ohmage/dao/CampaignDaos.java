@@ -155,6 +155,11 @@ public final class CampaignDaos extends Dao {
 		"AND cl.id = uc.class_id " +
 		"AND uc.user_class_role_id = ccdr.user_class_role_id " +
 		"AND ccdr.user_role_id = ur.id";
+	
+	private static final String SQL_GET_CAMPAIGNS_FOR_CLASS =
+			"SELECT campaign_id " +
+			"FROM campaign_class " +
+			"WHERE class_id = ? ";
 
 	// Inserts a new campaign.
 	private static final String SQL_INSERT_CAMPAIGN = 
@@ -1194,5 +1199,12 @@ public final class CampaignDaos extends Dao {
 				}
 			}
 		}
+	}
+	
+	public static List<String> getCampaignsAssociatedWithClass(String class_id) {
+		return instance.getJdbcTemplate().query(
+				SQL_GET_CAMPAIGNS_FOR_CLASS, 
+				new Object[] { class_id },
+				new SingleColumnRowMapper<String>());
 	}
 }

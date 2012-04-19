@@ -93,11 +93,22 @@ CREATE TABLE class (
 -- Table for storing PDV configuration
 -- --------------------------------------------------------------------
 CREATE TABLE pdv_config (
-  id int unsigned NOT NULL, auto_increment,
+  id int unsigned NOT NULL auto_increment,
   obj_group TINYTEXT NOT NULL,
   obj_key TINYTEXT NOT NULL,
   byte_out BLOB,
-  PRIMARY_KEY(obj_group, obj_key)
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------------------
+-- Table for storing PDV configuration
+-- --------------------------------------------------------------------
+CREATE TABLE device_state (
+	id int unsigned NOT NULL auto_increment,
+	username varchar(255) NOT NULL,
+	origin_id varchar(255) NOT NULL,
+	lastID int unsigned NOT NULL,
+	PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------------------

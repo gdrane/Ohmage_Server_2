@@ -57,7 +57,8 @@ public class StreamTransport {
 		this._ccn_handle = handle;
 
 		try {
-			this.base_name = _stream.app.getBaseName().append(_stream.data_stream_id);
+			this.base_name = _stream.app.getBaseName().
+					append(_stream.data_stream_id);
 		}
 		catch (MalformedContentNameStringException ex) {
 			throw new PDCException("Unable to create base name for the data stream",
@@ -405,8 +406,10 @@ public class StreamTransport {
 		assert origin_id != null;
 		
 		try {
-			uri = _stream.getPublisherStreamURI().append(Constants.STR_CONTROL).
-					append("list");
+			uri = _stream.getPublisherStreamURI().
+					append(origin_id).
+					append(_stream.data_stream_id).
+					append(Constants.STR_CONTROL).append("list");
 			if (start != null) {
 				uri = uri.append(start);
 				if (end != null)
@@ -417,8 +420,6 @@ public class StreamTransport {
 			}
 			else
 				throw new Error("Start is null, but end is not null???");
-			// Adding the origin_id in the end
-			uri.append(origin_id);
 		}
 		catch (MalformedContentNameStringException ex) {
 			throw new Error(String.format(
@@ -493,7 +494,9 @@ public class StreamTransport {
 		byte[] decoded;
 		List<String> result;
 		try {
-			uri = _stream.getPublisherStreamURI().append(Constants.STR_CONTROL).
+			uri = _stream.getPublisherStreamURI().
+					append(_stream.data_stream_id).
+					append(Constants.STR_CONTROL).
 					append("list");
 
 			if (start != null) {
@@ -617,9 +620,9 @@ public class StreamTransport {
 
 		try {
 			data_uri = _stream.getPublisherStreamURI().
+					append(origin_id).
 					append(_stream.data_stream_id).
-					append(Constants.STR_DATA).append(content_id).
-					append(origin_id);
+					append(Constants.STR_DATA).append(content_id);
 			try {
 				response = _ccn_handle.get(data_uri, 
 						SystemConfiguration.LONG_TIMEOUT);
@@ -745,14 +748,14 @@ public class StreamTransport {
 
 		storage = (MYSQLDataStorage) _stream.getStorage();
 		
-		String origin_id = postfix.stringComponent(0);
+		String origin_id = postfix.stringComponent(3);
 
 		publisher = _stream.getPublisher();
 		if (publisher == null) {
 			Log.warning("No uplink defined; fetching aborted");
 			return true;
 		}
-
+		// Code that allows to have multiple phones
 		last_entry = storage.getLastEntry(_stream.getUsername(), origin_id);
 
 		Log.info("### REQUESTING LIST OF NEW DATA IDS ### (Step T3)");

@@ -1,6 +1,7 @@
 package org.ohmage.jee.servlet;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -285,17 +286,112 @@ public class RequestServlet extends HttpServlet {
 		else if(RequestBuilder.API_DOCUMENT_READ_CONTENTS.equals(httpRequest.getRequestURI())) {
 			processRequest(httpRequest, httpResponse);
 		}
-		else if(httpRequest.getRequestURI().startsWith("/app/viz/")) {
+		else if(httpRequest.getRequestURI().startsWith("/app-2.7/app/viz/")) {
 			processRequest(httpRequest, httpResponse);
+		}
+		else if(RequestBuilder.API_EASY_POST.equals(httpRequest.getRequestURI())) {
+			// processRequest(httpRequest, httpResponse);
+			try {
+				PrintWriter out = httpResponse.getWriter();
+				String outputString = "<html><head><title>Easy Post Through Browser</title>" +
+						"</head><body><h2>Configuration APIs</h2>" +
+						"<h3>Configuration:</h3>" +
+						"<form action=\"/app-2.7/app/config/read\" method=\"post\">" +
+						"<input type=\"submit\" value=\"Submit\" />" +
+						"</form>" +
+						"<h2>Authentication APIs</h2>" +
+						"<h3>Token:</h3>" +
+						"<form action=\"/app-2.7/app/user/auth_token\" method=\"post\">" +
+								"Username: <input type=\"text\" name=\"user\" />" +
+								"<br />" +
+								"Password: <input type=\"text\" name=\"password\" />" +
+								"<br />" +
+								"Client: <input type=\"text\" name=\"client\" value=\"testWeb\" />" +
+								"<br /><input type=\"submit\" value=\"Submit\" />" +
+								"</form> " +
+								"<h3>Change Password:</h3>" +
+								"<form action=\"/app-2.7/app/user/change_password\" method=\"post\">" +
+								"Username: <input type=\"text\" name=\"user\" /><br />" +
+								"Password: <input type=\"text\" name=\"password\" /><br />" +
+								"New Password: <input type=\"text\" name=\"new_password\" /><br />" +
+								"Client: <input type=\"text\" name=\"client\" value=\"testWeb\" /><br />" +
+								"<input type=\"submit\" value=\"Submit\" />" +
+								"</form>" +
+								"<h2>User APIs</h2>" +
+								"<h3>Create User:</h3>" +
+								"<form action=\"/app-2.7/app/user/create\" method=\"post\">" +
+								"    Token: <input type=\"text\" name=\"auth_token\" /><br />" +
+								"    Username: <input type=\"text\" name=\"username\" /><br />" +
+								"    Password: <input type=\"text\" name=\"password\" /><br />" +
+								"    Client: <input type=\"text\" name=\"client\" value=\"testWeb\" /><br />" +
+								"    Admin: <input type=\"text\" name=\"admin\" /><br />" +
+								"    Enabled: <input type=\"text\" name=\"enabled\" /><br />" +
+								"    * New Account: <input type=\"text\" name=\"new_account\" /><br />" +
+								"    * Campaign Creation Privilege: <input type=\"text\" name=\"campaign_creation_privilege\" /><br />" +
+								"    <input type=\"submit\" value=\"Submit\" />" +
+								"</form>" +
+								"<h2>Campaign APIs</h2>" +
+								"<h3>Campaign Create:</h3>" +
+								"<form action=\"/app-2.7/app/campaign/create\" enctype=\"multipart/form-data\" method=\"post\">" +
+								"    Token: <input type=\"text\" name=\"auth_token\" /><br />" +
+								"    Running State: <input type=\"text\" name=\"running_state\" /><br />" +
+								"    Privacy State: <input type=\"text\" name=\"privacy_state\" /><br />" +
+								"    Class ID List: <input type=\"text\" name=\"class_urn_list\" /><br />" +
+								"    XML: <input type=\"file\" name=\"xml\" /><br />" +
+								"    Client: <input type=\"text\" name=\"client\" value=\"testWeb\" /><br />" +
+								"    * Description: <input type=\"text\" name=\"description\" /><br />" +
+								"    <input type=\"submit\" value=\"Submit\" />" +
+								"</form>" +
+								"<h3>Campaign Read:</h3>" +
+								"<form action=\"/app-2.7/app/campaign/read\" method=\"post\">" +
+								"    Output Format: <input type=\"text\" name=\"output_format\" /><br />" +
+								"    Client: <input type=\"text\" name=\"client\" value=\"testWeb\" /><br />" +
+								"    * Campaign URN List: <input type=\"text\" name=\"campaign_urn_list\" /><br />" +
+								"    * Class URN List: <input type=\"text\" name=\"class_urn_list\" /><br />" +
+								"    * Start Date: <input type=\"text\" name=\"start_date\" /><br />" +
+								"    * End Date: <input type=\"text\" name=\"end_date\" /><br /" +
+								"    * Privacy State: <input type=\"text\" name=\"privacy_state\" /><br />" +
+								"    * Running State: <input type=\"text\" name=\"running_state\" /><br />" +
+								"    * Campaign Role: <input type=\"text\" name=\"user_role\" /><br />" +
+								"    <input type=\"submit\" value=\"Submit\" />" +
+								"</form>" +
+								"<h2>Class APIs</h2>" +
+								"<h3>Create Class:</h3>" +
+								"<form action=\"/app-2.7/app/class/create\" method=\"post\">" +
+								"    Token: <input type=\"text\" name=\"auth_token\" /><br />" +
+								"    Class ID: <input type=\"text\" name=\"class_urn\" /><br />" +
+								"    Class Name: <input type=\"text\" name=\"class_name\" /><br />" +
+								"    Client: <input type=\"text\" name=\"client\" value=\"testWeb\" /><br />" +
+								"    * Description: <input type=\"text\" name=\"description\" /><br />" +
+								"    <input type=\"submit\" value=\"Submit\" />" +
+								"</form>" +
+								"<h3>Class Update:</h3>" +
+								"<form action=\"/app-2.7/app/class/update\" method=\"post\">" +
+								"    Token: <input type=\"text\" name=\"auth_token\" /><br />" +
+								"    Class ID: <input type=\"text\" name=\"class_urn\" /><br />" +
+								"    Client: <input type=\"text\" name=\"client\" value=\"testWeb\" /><br />" +
+								"    * New Name: <input type=\"text\" name=\"class_name\" /><br />" +
+								"    * New Description: <input type=\"text\" name=\"description\" /><br />" +
+								"    * User List Add: <input type=\"text\" name=\"user_role_list_add\" /><br />" +
+								"   * Privileged User List Add: <input type=\"text\" name=\"privileged_user_list_add\" /><br />" +
+								"   * User List Remove: <input type=\"text\" name=\"user_list_remove\" /><br />" +
+								"    <input type=\"submit\" value=\"Submit\" />" +
+								"</form>";
+				out.println(outputString);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 		}
 		else {
 			LOGGER.warn("GET attempted and denied.");
-			try {
+			/*try {
 				httpResponse.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
 			}
 			catch(IOException e) {
 				LOGGER.error("Error while attempting to respond.", e);
-			}
+			}*/
 			return;
 		}
 	}

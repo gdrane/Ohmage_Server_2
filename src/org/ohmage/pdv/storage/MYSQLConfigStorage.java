@@ -2,16 +2,20 @@ package org.ohmage.pdv.storage;
 
 import java.io.IOException;
 
+import org.apache.log4j.Logger;
 import org.ohmage.dao.PDVConfigDaos;
 
 import edu.ucla.cens.pdc.libpdc.iConfigStorage;
+import edu.ucla.cens.pdc.libpdc.core.GlobalConfig;
 
 public class MYSQLConfigStorage implements iConfigStorage {
 	
-	MYSQLConfigStorage() 
+	public MYSQLConfigStorage() 
 	{
+		LOGGER.info("Config Storage constructor called");
 		setupObject();
 	}
+	
 	private void setupObject()
 	{
 		
@@ -32,5 +36,8 @@ public class MYSQLConfigStorage implements iConfigStorage {
 	public void removeEntry(String group, String name) throws IOException {
 			PDVConfigDaos.removeEntry(group, name);
 	}
+	
+	private static final Logger LOGGER = 
+			Logger.getLogger(MYSQLConfigStorage.class);
 
 }

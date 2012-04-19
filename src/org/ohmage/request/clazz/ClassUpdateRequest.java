@@ -2,6 +2,7 @@ package org.ohmage.request.clazz;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -13,11 +14,14 @@ import org.ohmage.exception.ServiceException;
 import org.ohmage.exception.ValidationException;
 import org.ohmage.request.InputKeys;
 import org.ohmage.request.UserRequest;
+import org.ohmage.service.CampaignServices;
 import org.ohmage.service.ClassServices;
 import org.ohmage.service.UserClassServices;
 import org.ohmage.validator.ClassValidators;
 import org.ohmage.validator.UserClassValidators;
 import org.ohmage.validator.UserValidators;
+
+import edu.ucla.cens.pdc.libpdc.util.Log;
 
 /**
  * <p>This class is responsible for updating a class. The requesting user must
@@ -164,6 +168,29 @@ public class ClassUpdateRequest extends UserRequest {
 			
 			LOGGER.info("Updating the class.");
 			ClassServices.updateClass(this, classId, className, classDescription, usersToAdd, usersToRemove);
+			
+			List<String> campaignUrns = 
+					CampaignServices.getCampaignsAssociatedWithClass(classId);
+			for(String campaignUrn : campaignUrns)
+				Log.info("Camapign Urn" + campaignUrn);
+			if(usersToAdd != null && !usersToAdd.isEmpty()) {
+				Set<String> users = usersToAdd.keySet();
+				for(String campaignId : campaignUrns) {
+					for(String username : users) {
+						if(CampaignServices.createSurveyStreamsForCampaignUser(
+								this, campaignId, username))
+							Log.info("Stream creation for user was successful");
+						else 
+							Log.info("Stream creation for user was " +
+									"unsuccessful");
+					}
+				}
+			}
+			
+			if(usersToRemove != null && !usersToRemove.isEmpty()) {
+				// TODO(gdrane): Delete streams as user is removed from the class
+			}
+			
 		}
 		catch(ServiceException e) {
 			e.logException(LOGGER);

@@ -5,6 +5,7 @@ import java.util.Map;
 
 import jbcrypt.BCrypt;
 
+import org.apache.log4j.Logger;
 import org.ohmage.annotator.ErrorCodes;
 import org.ohmage.dao.UserCampaignDaos;
 import org.ohmage.dao.UserClassDaos;
@@ -15,6 +16,7 @@ import org.ohmage.exception.DataAccessException;
 import org.ohmage.exception.ServiceException;
 import org.ohmage.pdv.OhmagePDVGlobals;
 import org.ohmage.request.Request;
+import org.ohmage.request.auth.AuthTokenRequest;
 
 /**
  * This class contains the services for users.
@@ -22,6 +24,7 @@ import org.ohmage.request.Request;
  * @author John Jenkins
  */
 public final class UserServices {
+	private static final Logger LOGGER = Logger.getLogger(UserServices.class);
 	/**
 	 * Default constructor. Made private so that it cannot be instantiated.
 	 */
@@ -54,6 +57,7 @@ public final class UserServices {
 			String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(13));
 			
 			UserDaos.createUser(username, hashedPassword, admin, enabled, newAccount, campaignCreationPrivilege);
+			LOGGER.info("Creating streams for the user");
 			OhmagePDVGlobals.createStreamsForUser("ohmage", username);			
 		}
 		catch(DataAccessException e) {

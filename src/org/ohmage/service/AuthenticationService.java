@@ -1,11 +1,13 @@
 package org.ohmage.service;
 
+import org.apache.log4j.Logger;
 import org.ohmage.annotator.ErrorCodes;
 import org.ohmage.dao.AuthenticationDao;
 import org.ohmage.dao.AuthenticationDao.UserInformation;
 import org.ohmage.exception.DataAccessException;
 import org.ohmage.exception.ServiceException;
 import org.ohmage.request.UserRequest;
+import org.ohmage.request.auth.AuthTokenRequest;
 
 /**
  * This class contains the authentication services.
@@ -13,6 +15,8 @@ import org.ohmage.request.UserRequest;
  * @author John Jenkins
  */
 public final class AuthenticationService {
+	
+	private static final Logger LOGGER = Logger.getLogger(AuthenticationService.class);
 	/**
 	 * Default constructor. Private to facilitate the Singleton pattern.
 	 */
@@ -38,6 +42,7 @@ public final class AuthenticationService {
 		// If the user is already logged in, then they are already 
 		// authenticated.
 		if(request.getUser().isLoggedIn()) {
+			LOGGER.info("User already logged in");
 			return true;
 		}
 		
@@ -55,6 +60,7 @@ public final class AuthenticationService {
 		// If the username and/or password were incorrect, then null was 
 		// returned. Therefore, return false.
 		if(userInformation == null) {
+			LOGGER.info("Username and password are incorrect");
 			return false;
 		}
 		

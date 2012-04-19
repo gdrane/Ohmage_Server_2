@@ -20,6 +20,7 @@ import edu.ucla.cens.pdc.libpdc.util.Log;
 import edu.ucla.cens.pdc.libpdc.util.StringUtil;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,6 +29,7 @@ import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.KeyLocator;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
+import org.ohmage.pdv.OhmagePDVGlobals;
 
 /**
  *
@@ -153,15 +155,9 @@ public class DataStream implements iDataStream, iState {
 		uri = _publisher.uri;
 		assert uri != null : "Publisher should always have URI";
 
-		try {
-			result = uri.append(app.getAppName()).append(data_stream_id);
-			return result;
-		}
-		catch (MalformedContentNameStringException ex) {
-			throw new Error(
-					String.format("Unable to create %s/%s/%s", uri, app.getAppName(),
-					data_stream_id), ex);
-		}
+		result = uri;
+		return result;
+		
 	}
 	
 	public ContentName getPublisherStreamURIOhmage()
@@ -257,7 +253,8 @@ public class DataStream implements iDataStream, iState {
 		assert digest != null;
 
 		try {
-			name = node.uri.append(app.getAppName()).append(data_stream_id).append(
+			name = node.uri.append(OhmagePDVGlobals.getAppInstance()).
+					append(data_stream_id).append(
 					Constants.STR_CONTROL).append("key");
 
 			return new KeyLocator(name, digest);
@@ -408,6 +405,19 @@ public class DataStream implements iDataStream, iState {
 	{
 		return _tablename;
 	}
+	
+	public boolean isStreamSetup() {
+		return _is_setup;
+	}
+	
+	public void updateStreamSetupStatus(StreamInfo si) {
+		byte[] enc_key = si.getStreamKey();
+		byte[] stream_enc_key = _transport._encryptor.getEncryptKey();
+		if(Arrays.equals(enc_key, stream_enc_key))
+			_is_setup = true;
+		else 
+			_is_setup = false;
+	}
 // </editor-fold>
 
 	/**
@@ -450,5 +460,11 @@ public class DataStream implements iDataStream, iState {
 	 * Stream MYSQL tablename
 	 */
 	protected String _tablename;
+	
+	/**
+	 * 
+	 */
+	private boolean _is_setup = false;
+	 
 
 }

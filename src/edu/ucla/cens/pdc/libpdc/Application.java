@@ -25,6 +25,7 @@ import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.protocol.ContentName;
 import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import org.ccnx.ccn.protocol.PublisherPublicKeyDigest;
+import org.ohmage.pdv.OhmagePDVGlobals;
 
 /**
  * Stores information about applications that PDV handles
@@ -72,7 +73,7 @@ public class Application implements iApplication, iState {
 		GlobalConfig config = GlobalConfig.getInstance();
 
 		try {
-			_base_uri = config.getRoot().append(name);
+			_base_uri = config.getRoot().append(OhmagePDVGlobals.getAppInstance());
 		}
 		catch (MalformedContentNameStringException ex) {
 			throw new Error("Unable to set base name", ex);

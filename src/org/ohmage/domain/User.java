@@ -19,8 +19,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.ohmage.cache.CampaignRoleCache;
 import org.ohmage.cache.ClassRoleCache;
+import org.ohmage.request.UserRequest;
 import org.ohmage.util.StringUtils;
 
 /**

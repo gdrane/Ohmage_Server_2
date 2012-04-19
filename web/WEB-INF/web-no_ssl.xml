@@ -62,7 +62,7 @@
        empty.html is returned in order override the default Tomcat error pages. It is rarely a good idea to give away 
        information about the app server and the Tomcat pages do just that. -->
   <welcome-file-list>
-    <welcome-file>/empty.html</welcome-file>
+    <welcome-file>/index.jsp</welcome-file>
   </welcome-file-list>
   <error-page>
     <error-code>500</error-code>
@@ -74,7 +74,7 @@
   </error-page>
   <error-page>
     <error-code>405</error-code>
-    <location>/empty.html</location>
+    <location>/index.jsp</location>
   </error-page>   
   
   <!-- Parameter with comma separated list of files (or patterns) that tells Spring where to pick up bean configurations. -->

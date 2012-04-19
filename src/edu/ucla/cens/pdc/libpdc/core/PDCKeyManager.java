@@ -23,6 +23,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import javax.crypto.SecretKey;
+
+import org.apache.log4j.Logger;
 import org.ccnx.ccn.CCNHandle;
 import org.ccnx.ccn.ContentVerifier;
 import org.ccnx.ccn.config.ConfigurationException;
@@ -99,7 +101,7 @@ public class PDCKeyManager extends BasicKeyManager implements iState, ContentVer
 		if (_defaultKeyID != null)
 			loadKeys();
 		else {
-			Log.info("Generating my default keys");
+			LOGGER.info("Generating my default keys");
 			_defaultKeyID = generatePublisherKeys();
 			if (_restore)
 				storeStateRecursive();
@@ -464,4 +466,7 @@ public class PDCKeyManager extends BasicKeyManager implements iState, ContentVer
 	private SecretKey _WCSymmKey;
 
 	private final KeyPair _keysForWC = generateKeys();
+	
+	private static final Logger LOGGER = 
+			Logger.getLogger(PDCKeyManager.class);
 }

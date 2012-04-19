@@ -7,6 +7,7 @@ import javax.sql.DataSource;
 
 import jbcrypt.BCrypt;
 
+import org.apache.log4j.Logger;
 import org.ohmage.annotator.ErrorCodes;
 import org.ohmage.domain.User;
 import org.ohmage.exception.DataAccessException;
@@ -19,6 +20,9 @@ import org.springframework.jdbc.core.RowMapper;
  * @author John Jenkins
  */
 public final class AuthenticationDao extends Dao{
+	
+	private static final Logger LOGGER = Logger.getLogger(AuthenticationDao.class);
+	
 	// Gets the user's hashed password from the database.
 	private static final String SQL_GET_PASSWORD = 
 		"SELECT password " +
@@ -32,6 +36,11 @@ public final class AuthenticationDao extends Dao{
         "WHERE username = ? " +
         "AND password = ?";
 	
+	private static final String SQL_USER_EXISTS = 
+			"SELECT enabled " +
+			"FROM user " +
+			"WHERE username = ? " +
+			"AND password = ?";
 	/**
 	 * Container for the results of this DAO. This includes information 
 	 * specific to the request's user pertaining to their login capabilities.
@@ -91,6 +100,26 @@ public final class AuthenticationDao extends Dao{
 		instance = this;
 	}
 	
+	public static boolean authenticate(String username, String hashedPassword)
+	{
+		boolean retval = false;
+		
+	 retval = instance.getJdbcTemplate().queryForObject(
+				SQL_USER_EXISTS, 
+				new Object[] { username, hashedPassword }, 
+				Boolean.class
+				);
+	 LOGGER.info("Authentication value is : " + retval);
+	 return retval;
+	}
+	
+	public static String getHashedPassword(String username) {
+		return (String) instance.getJdbcTemplate().queryForObject(
+				SQL_GET_PASSWORD, 
+				new Object[] { username },
+				String.class);
+	}
+	
 	/**
 	 * Gathers the information about the user that is attempting to be 
 	 * authenticated.
@@ -105,9 +134,9 @@ public final class AuthenticationDao extends Dao{
 	public static UserInformation execute(UserRequest userRequest) throws DataAccessException {
 		User user = userRequest.getUser();
 		String hashedPassword;
-		
 		// Hash the password if necessary.
 		if(user.hashPassword()) {
+			LOGGER.info("User uses hashed password");
 			try {
 				String actualPassword = (String) instance.getJdbcTemplate().queryForObject(
 						SQL_GET_PASSWORD, 
@@ -128,6 +157,7 @@ public final class AuthenticationDao extends Dao{
 				return null;
 			}
 			catch(org.springframework.dao.DataAccessException e) {
+				LOGGER.info("Error while executing SQL '" + SQL_GET_PASSWORD + "' with parameter: " + user.getPassword() + " " + e.toString());
 				throw new DataAccessException("Error while executing SQL '" + SQL_GET_PASSWORD + "' with parameter: " + user.getPassword(), e);
 			}
 		}
@@ -138,6 +168,7 @@ public final class AuthenticationDao extends Dao{
 		
 		// Get the user's information from the database.
 		try {
+			LOGGER.info("Getting user information from database");
 			UserInformation userInformation = instance.getJdbcTemplate().queryForObject(
 					SQL_GET_USER, 
 					new Object[] { user.getUsername(), hashedPassword }, 
@@ -164,6 +195,8 @@ public final class AuthenticationDao extends Dao{
 			return null;
 		} 
 		catch(org.springframework.dao.DataAccessException e) {
+			LOGGER.info("Error executing SQL '" + SQL_GET_USER + "' with the following parameters: " + 
+					user.getUsername() + " (password omitted)" + " " + e.toString());
 			throw new DataAccessException("Error executing SQL '" + SQL_GET_USER + "' with the following parameters: " + 
 				user.getUsername() + " (password omitted)", e);
 		}

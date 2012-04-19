@@ -277,7 +277,7 @@ public abstract class UserRequest extends Request {
 		// looking for a username and password.
 		boolean getToken = false;
 		
-		// Attempt to retrieve all usernames passed to the server.
+		// Attempt to retrieve all username passed to the server.
 		String[] usernames = getParameterValues(InputKeys.USER);
 		
 		// If it is missing, search for a token.
@@ -340,7 +340,7 @@ public abstract class UserRequest extends Request {
 						setFailed(ErrorCodes.AUTHENTICATION_FAILED, "The token is unknown.");
 					}
 				}
-				// If there are multipile authentication token cookies, fail the
+				// If there are multiple authentication token cookies, fail the
 				// request.
 				else if(cookies.size() > 1){
 					LOGGER.info("Multiple authentication token cookies were found.");

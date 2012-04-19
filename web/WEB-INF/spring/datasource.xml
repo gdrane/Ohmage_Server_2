@@ -19,6 +19,6 @@
     <property name="testWhileIdle" value="true" />
     <property name="timeBetweenEvictionRunsMillis" value="3600000" />
     <property name="minEvictableIdleTimeMillis" value="14400000" />
-  </bean>
+ </bean>
 
 </beans>

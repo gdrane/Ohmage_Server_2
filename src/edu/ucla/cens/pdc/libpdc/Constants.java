@@ -14,6 +14,8 @@ public final class Constants {
 	final static public String STR_DATA = "data";
 
 	final static public String STR_MANAGE = "manage";
+	
+	final static public String STR_KEYSTORE = "key_store";
 
 	final static public String KEY_LOCATION = "keys";
 

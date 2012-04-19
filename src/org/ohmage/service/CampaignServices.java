@@ -2,6 +2,7 @@ package org.ohmage.service;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -16,16 +17,25 @@ import nu.xom.ValidityException;
 import nu.xom.XMLException;
 import nu.xom.XPathException;
 
+import org.ccnx.ccn.protocol.MalformedContentNameStringException;
 import org.ohmage.annotator.ErrorCodes;
 import org.ohmage.cache.CampaignPrivacyStateCache;
 import org.ohmage.cache.CampaignRoleCache;
 import org.ohmage.cache.CampaignRunningStateCache;
+import org.ohmage.dao.AuthenticationDao;
 import org.ohmage.dao.CampaignDaos;
 import org.ohmage.domain.User;
 import org.ohmage.domain.configuration.Configuration;
 import org.ohmage.exception.DataAccessException;
 import org.ohmage.exception.ServiceException;
+import org.ohmage.pdv.OhmagePDVGlobals;
 import org.ohmage.request.Request;
+
+import edu.ucla.cens.pdc.libpdc.iApplication;
+import edu.ucla.cens.pdc.libpdc.core.GlobalConfig;
+import edu.ucla.cens.pdc.libpdc.stream.DataStream;
+import edu.ucla.cens.pdc.libpdc.transport.PDCPublisher;
+import edu.ucla.cens.pdc.libpdc.util.Log;
 
 /**
  * This class contains the services that pertain to campaigns.
@@ -38,6 +48,7 @@ public class CampaignServices {
 	private static final String PATH_CAMPAIGN_NAME = "/campaign/campaignName";
 	private static final String PATH_ICON_URL = "/campaign/iconUrl";
 	private static final String PATH_AUTHORED_BY = "/campaign/authoredBy";
+	private static final String PATH_SURVEY_NAME = "/campaign/surveys/survey/id";
 	
 	/**
 	 * Default constructor. Private to prevent instantiation.
@@ -617,5 +628,109 @@ public class CampaignServices {
 			request.setFailed();
 			throw new ServiceException(e);
 		}
+	}
+	
+	public static List<String> getSurveyFromXML(Request request, String xml) 
+			throws ServiceException {
+		ArrayList<String> survey_names = new ArrayList<String>();
+		// Generate a builder that will build the XML Document.
+		Builder builder;
+		try {
+			builder = new Builder();
+		}
+		catch(XMLException e) {
+			request.setFailed();
+			throw new ServiceException("No satisfactory XML parser is installed on the system!", e);
+		}
+		
+		// Build the XML Document that we will parse for the campaign name.
+		Document xmlDocument;
+		try {
+			xmlDocument = builder.build(new StringReader(xml));
+		} catch (IOException e) {
+			// The XML should already have been validated, so this should
+			// never happen.
+			request.setFailed();
+			throw new ServiceException("The XML String being passed into this function was unreadable.", e);
+		} catch (ValidityException e) {
+			// The XML should already have been validated, so this should
+			// never happen.
+			request.setFailed();
+			throw new ServiceException("Validation failed, but XML validation shouldn't have been enabled here as it should have already been done.", e);
+		} catch (ParsingException e) {
+			// The XML should already have been validated, so this should
+			// never happen.
+			request.setFailed();
+			throw new ServiceException("The XML is not well-formed, but it should have been validated before reaching this point.", e);
+		}
+		xmlDocument.getRootElement().query(PATH_CAMPAIGN_NAME).get(0).getValue();
+		int size = 
+				xmlDocument.getRootElement().query(PATH_SURVEY_NAME).size();
+		Log.info("Size of the Nodes" + size);
+		while(size > 0) {
+			String survey = 
+					xmlDocument.getRootElement().
+					query("/campaign/surveys/survey/id").
+					get(size - 1).
+					getValue();
+			survey_names.add(survey);
+			Log.info(survey);
+			size --;
+		}
+		return survey_names;
+		
+	}
+	
+	public static boolean createSurveyStreamsForCampaignUser(Request request, 
+			String campaignUrn,
+			String username) throws ServiceException {
+				String xml = null;
+				String hashedPassword = null;
+				try {
+					xml = CampaignDaos.getXml(campaignUrn);
+					hashedPassword = 
+							AuthenticationDao.getHashedPassword(username);
+				} catch (DataAccessException e1) {
+					e1.printStackTrace();
+					return false;
+				}
+		
+				List<String> survey_names = getSurveyFromXML(request, xml);
+				ArrayList<String> stream_names = new ArrayList<String>();
+				GlobalConfig config = GlobalConfig.getInstance();
+				iApplication app = config.getApplication(OhmagePDVGlobals.getAppName());
+				DataStream ds = null;
+				PDCPublisher pub = null;
+				try {
+					pub = new PDCPublisher("/ndn/ucla.edu/apps/" + 
+				username + "/androidclient");
+					pub.setAuthenticator(hashedPassword);
+				} catch (MalformedContentNameStringException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+					return false;
+				}
+				if(survey_names == null)
+					return false;
+				for(String survey : survey_names) {
+					stream_names.add(OhmagePDVGlobals.
+							hashingFunction(campaignUrn + ":" + survey + ":" +
+					username));
+				}
+				try {
+					for(String stream : stream_names) {
+						ds = new DataStream(config.getCCNHandle(), app, stream, false);
+						ds.setPublisher(pub);
+						app.addDataStream(ds);
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+					return false;
+				}
+				return true;
+	}
+	
+	public static List<String> getCampaignsAssociatedWithClass(String classId) {
+		return CampaignDaos.getCampaignsAssociatedWithClass(classId);
 	}
 }

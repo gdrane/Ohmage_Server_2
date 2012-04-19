@@ -44,19 +44,22 @@ public class PDVDataDaos extends AbstractUploadDao {
 
 	protected PDVDataDaos(DataSource dataSource) {
 		super(dataSource);
-		// TODO Auto-generated constructor stub
+		
 		instance = this;
 	}
 	public static boolean insertRecord(DataRecord record) throws DataAccessException
 	{
 		if(record != null)
 		{
+			@SuppressWarnings("rawtypes")
 			Map requestParams =
 					record.toMap();
 			final String campaignUrn = (String)requestParams.get("campaign_urn");
-			int campaignCreationTimestamp = Integer.parseInt((String)requestParams.get("campaign_creation_timestamp"));
+			//int campaignCreationTimestamp = 
+			//		Integer.parseInt((String)
+			//				requestParams.get("campaign_creation_timestamp"));
 			final String username = (String)requestParams.get("user");
-			String hashedPassword = (String)requestParams.get("password");
+			//String hashedPassword = (String)requestParams.get("password");
 			final String client = (String)requestParams.get("client");
 			String surveyJSONObject = StringUtils.urlDecode((String)requestParams.get("surveys"));
 			JSONObject temp = null;
@@ -67,7 +70,7 @@ public class PDVDataDaos extends AbstractUploadDao {
 				e2.printStackTrace();
 			}
 			final JSONObject survey = temp;
-			List<Integer> duplicateIndexList = new ArrayList<Integer>();
+			//List<Integer> duplicateIndexList = new ArrayList<Integer>();
 			Configuration configuration = null;
 			try {
 				configuration = CampaignServices.findCampaignConfiguration(null, campaignUrn);
@@ -449,28 +452,28 @@ public class PDVDataDaos extends AbstractUploadDao {
 	        "VALUES (?,?,?,?,?,?)";
 	
 	private static final String SQL_INSERT_NEW_DEVICE = 
-			"INSERT into device_state" +
-			"(username, origin_id, lastID" +
+			"INSERT into device_state " +
+			"(username, origin_id, lastID) " +
 			"VALUES (?,?,?)";	
 	
 	private static final String SQL_CHECK_DEVICE_EXISTS = 
 			"SELECT EXISTS( " +
 			"SELECT * " +
-			"FROM device_state" +
-			"WHERE username = ?" +
-			"AND origin_id = ?" +
+			"FROM device_state " +
+			"WHERE username = ? " +
+			"AND origin_id = ? " +
 			")";
 
 	private static final String SQL_GET_LAST_ENTRY = 
 			"SELECT * " +
-			"FROM device_state" +
-			"WHERE username =?" +
-			"origin_id = ?";
+			"FROM device_state " +
+			"WHERE username =? " +
+			"origin_id = ? ";
 	
 	private static final String SQL_UPDATE_LAST_ENTRY = 
 			"UPDATE device_state " +
-			"SET lastID = ?" +
-			"WHERE username = ? AND" +
+			"SET lastID = ? " +
+			"WHERE username = ? AND " +
 			"origin_id = ? ";
 	
 }

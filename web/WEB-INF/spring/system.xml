@@ -23,7 +23,7 @@
     <entry key="db.driver" value="com.mysql.jdbc.Driver"/>
     <entry key="db.jdbcurl" value="jdbc:mysql://localhost:3306/andwellness"/>
     <entry key="db.username" value="andwellness"/>
-    <entry key="db.password" value="&amp;!sickly"/>
+    <entry key="db.password" value="sickly"/>
   </util:map>
 
   <util:map id="systemProps">
